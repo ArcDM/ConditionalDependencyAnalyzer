@@ -1,0 +1,3 @@
+[submodule "LogicalMatrix"]
+	path = LogicalMatrix
+	url = git://github.com/ArcDM/LogicalMatrix.git

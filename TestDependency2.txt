@@ -1,0 +1,9 @@
+A; C & B & F
+B; F
+C; F
+E; A & B
+G; D
+H; F
+###INITIAL###
+F
+D

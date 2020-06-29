@@ -3,7 +3,7 @@ B; F
 C; F
 E; A & B
 G; D
-H; F
+H; B
 ###INITIAL###
 F
 D

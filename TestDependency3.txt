@@ -1,0 +1,5 @@
+A;      # Initial
+B; A
+C; A | B
+D
+E; C & D

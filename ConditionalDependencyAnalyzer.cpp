@@ -14,9 +14,9 @@ int main( int argc, char const *argv[] )
     std::cout << "Demo test" << std::endl;
 
     //ConditionalDependencyAnalyzer cda;
-    ConditionalDependencyAnalyzer cda( "C:\\Users\\ArcDM\\github\\ConditionalDependencyAnalyzer\\TestDependency2.txt" );
+    ConditionalDependencyAnalyzer cda( "C:\\Users\\ArcDM\\github\\ConditionalDependencyAnalyzer\\TestDependency3.txt" );
 
-    std::cout << cda << std::endl << std::endl;
+    std::cout << cda << std::endl;
 
     std::string result = cda.analyze();
 
@@ -59,7 +59,7 @@ ConditionalDependencyAnalyzer::ConditionalDependencyAnalyzer()
 
 ConditionalDependencyAnalyzer::ConditionalDependencyAnalyzer( const char filename[] )
 {
-    size_t found;
+    size_t found, delimiter_length = std::string( DELIMITER ).length();
     std::string line, statement;
     std::ifstream read_file( filename );
 
@@ -76,17 +76,21 @@ ConditionalDependencyAnalyzer::ConditionalDependencyAnalyzer( const char filenam
             {
                 found = line.find( DELIMITER );
 
-                if( found != std::string::npos )
+                if( found == std::string::npos )
                 {
-                    statement = line.substr( found + std::string( DELIMITER ).length() );
+                    statement = "";
+                }
+                else
+                {
+                    statement = line.substr( found + delimiter_length );
                     line.erase( found );
+                }
 
-                    if( trim_string( line ) )
-                    {
-                        identifiers.push_back( line );
-                        LogicalMatrix temp_LogicalMatrix( trim_string( statement )? statement : "!" + line );
-                        data += temp_LogicalMatrix;
-                    }
+                if( trim_string( line ) )
+                {
+                    identifiers.push_back( line );
+                    LogicalMatrix temp_LogicalMatrix( trim_string( statement )? statement : "!" + line );
+                    data += temp_LogicalMatrix;
                 }
             }
         }
@@ -174,26 +178,38 @@ std::string ConditionalDependencyAnalyzer::analyze()
 
 std::ostream &operator<<( std::ostream &output, const ConditionalDependencyAnalyzer &object_arg )
 {
+    auto print_vector = [ &output ]( const std::vector< std::string > &input_vector )
+    {
+        std::string delim = "";
+
+        for( std::string const& value : input_vector )
+        {
+            output << delim << value;
+            delim = ", ";
+        }
+    };
+
     if( !object_arg.data.empty() )
     {
-        auto print_vector = [ &output ]( const std::vector< std::string > &input_vector )
-        {
-            std::string delim = "";
+        output << "Conditions: " << object_arg.data << std::endl;
+    }
 
-            for( std::string const& value : input_vector )
-            {
-                output << delim << value;
-                delim = ", ";
-            }
-        };
-
-        output << "Conditions: " << object_arg.data << "\nIdentifiers: ";
+    if( !object_arg.identifiers.empty() )
+    {
+        output << "Identifiers: ";
 
         print_vector( object_arg.identifiers );
 
-        output << std::endl << "Initial Identifiers: ";
+        output << std::endl;
+    }
+
+    if( !object_arg.initial_identifiers.empty() )
+    {
+        output <<"Initial Identifiers: ";
 
         print_vector( object_arg.initial_identifiers );
+
+        output << std::endl;
     }
 
     return output;

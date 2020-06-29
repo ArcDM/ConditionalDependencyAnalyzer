@@ -67,9 +67,6 @@ ConditionalDependencyAnalyzer::ConditionalDependencyAnalyzer( const char filenam
 
             if( trim_comment( line ) )
             {
-                //std::cout << "First set: " << line;
-
-                // split line by ConditionalDependencyAnalyzer::DELIMITER
                 found = line.find( DELIMITER );
 
                 if( found != std::string::npos )
@@ -79,14 +76,11 @@ ConditionalDependencyAnalyzer::ConditionalDependencyAnalyzer( const char filenam
 
                     if( trim_string( line ) && trim_string( statement ) )
                     {
-                        //std::cout << "; Split: \"" << line << "\" and \"" << statement << "\"";
                         identifiers.push_back( line );
                         data += LogicalMatrix( statement );
                     }
 
                 }
-
-                //std::cout << std::endl;
             }
         }
 
@@ -94,7 +88,6 @@ ConditionalDependencyAnalyzer::ConditionalDependencyAnalyzer( const char filenam
         {
             if( trim_comment( line ) )
             {
-                //std::cout << "Second set: " << line << std::endl;
                 initial_identifiers.push_back( line );
             }
         }

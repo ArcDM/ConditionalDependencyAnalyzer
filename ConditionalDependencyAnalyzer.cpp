@@ -13,7 +13,14 @@ int main( int argc, char const *argv[] )
 {
     std::cout << "Demo test" << std::endl;
 
-    std::cout << ConditionalDependencyAnalyzer() << std::endl;
+    //ConditionalDependencyAnalyzer cda;
+    ConditionalDependencyAnalyzer cda( "C:\\Users\\ArcDM\\github\\ConditionalDependencyAnalyzer\\TestDependency2.txt" );
+
+    std::cout << cda << std::endl << std::endl;
+
+    std::string result = cda.analyze();
+
+    std::cout << result << std::endl;
 }
 
 
@@ -74,12 +81,12 @@ ConditionalDependencyAnalyzer::ConditionalDependencyAnalyzer( const char filenam
                     statement = line.substr( found + std::string( DELIMITER ).length() );
                     line.erase( found );
 
-                    if( trim_string( line ) && trim_string( statement ) )
+                    if( trim_string( line ) )
                     {
                         identifiers.push_back( line );
-                        data += LogicalMatrix( statement );
+                        LogicalMatrix temp_LogicalMatrix( trim_string( statement )? statement : "!" + line );
+                        data += temp_LogicalMatrix;
                     }
-
                 }
             }
         }
@@ -100,34 +107,94 @@ ConditionalDependencyAnalyzer::ConditionalDependencyAnalyzer( const char filenam
     }
 }
 
-void ConditionalDependencyAnalyzer::Analyze()
+std::string ConditionalDependencyAnalyzer::analyze()
 {
+    std::map< std::string, bool > truth_table;
+    std::vector< bool > result;
+    std::vector< std::string > changed;
+    std::ostringstream output;
+    size_t index, iteration = 0;
 
+    for( const std::string& identifier : identifiers )
+    {
+        truth_table[ identifier ] = false;
+    }
+
+    output << ( initial_identifiers.empty()? "" : "Initial Identifiers:\n" );
+
+    for( const std::string& identifier : initial_identifiers )
+    {
+        output << identifier << std::endl;
+
+        truth_table[ identifier ] = true;
+    }
+
+    while( !data.empty() )
+    {
+        result = data.evaluate( truth_table );
+
+        index = identifiers.size();
+
+        do {
+            if( result[ --index ] )
+            {
+                truth_table[ identifiers[ index ] ] = true;
+                changed.push_back( identifiers[ index ] );
+
+                identifiers.erase( identifiers.begin() + index );
+                data.remove_statement( index );
+            }
+        } while( index > 0 );
+
+        if( changed.empty() )
+        {
+            output << "Unattainable Identifiers:" << std::endl;
+
+            for( const std::string& identifier : identifiers )
+            {
+                output << identifier << std::endl;
+            }
+
+            break;
+        }
+        else
+        {
+            output << "Step" << ++iteration << ":" << std::endl;
+
+            do {
+                output << changed.back() << std::endl;
+                changed.pop_back();
+            } while( !changed.empty() );
+        }
+    }
+
+    return output.str();
 }
 
 
 std::ostream &operator<<( std::ostream &output, const ConditionalDependencyAnalyzer &object_arg )
 {
-    auto print_vector = [ &output ]( const std::vector< std::string > &input_vector )
+    if( !object_arg.data.empty() )
     {
-        std::string delim = "";
-
-        for( std::string const& value : input_vector )
+        auto print_vector = [ &output ]( const std::vector< std::string > &input_vector )
         {
-            output << delim << value;
-            delim = ", ";
-        }
+            std::string delim = "";
 
-        output << std::endl;
-    };
+            for( std::string const& value : input_vector )
+            {
+                output << delim << value;
+                delim = ", ";
+            }
+        };
 
-    output << "Conditions: " << object_arg.data << "\nIdentifiers: ";
+        output << "Conditions: " << object_arg.data << "\nIdentifiers: ";
 
-    print_vector( object_arg.identifiers );
+        print_vector( object_arg.identifiers );
 
-    output << "Initial Identifiers: ";
+        output << std::endl << "Initial Identifiers: ";
 
-    print_vector( object_arg.initial_identifiers );
+        print_vector( object_arg.initial_identifiers );
+    }
 
     return output;
 }

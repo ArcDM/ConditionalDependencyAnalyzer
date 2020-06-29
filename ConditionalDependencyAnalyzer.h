@@ -24,7 +24,7 @@ class ConditionalDependencyAnalyzer
         ConditionalDependencyAnalyzer();
         ConditionalDependencyAnalyzer( const char filename[] );
 
-        void Analyze();
+        std::string analyze();
 
         bool empty() { return data.empty(); }
         friend std::ostream &operator<<( std::ostream &output, const ConditionalDependencyAnalyzer &object_arg );

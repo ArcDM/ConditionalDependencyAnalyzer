@@ -17,6 +17,18 @@ int main( int argc, char const *argv[] )
 }
 
 
+static inline bool trim_comment( std::string &input_string )
+{
+    size_t found = input_string.find( COMMENT );
+
+    if( found != std::string::npos )
+    {
+        input_string.erase( found );
+    }
+
+    return trim_string( input_string );
+}
+
 ConditionalDependencyAnalyzer::ConditionalDependencyAnalyzer()
 {
     OPENFILENAMEA openfilename = { sizeof( OPENFILENAMEA ) };
@@ -40,19 +52,50 @@ ConditionalDependencyAnalyzer::ConditionalDependencyAnalyzer()
 
 ConditionalDependencyAnalyzer::ConditionalDependencyAnalyzer( const char filename[] )
 {
-    std::string line;
+    size_t found;
+    std::string line, statement;
     std::ifstream read_file( filename );
 
     if( read_file.is_open() )
     {
         while( getline( read_file, line ) )
         {
-            if( !line.empty() )
+            if( line.find( INITIAL_FLAG ) == 0 )
             {
-                // test if line == "###INITIAL###"
+                break;
+            }
 
-                // retain only before ConditionalDependencyAnalyzer::COMMENT
+            if( trim_comment( line ) )
+            {
+                //std::cout << "First set: " << line;
+
                 // split line by ConditionalDependencyAnalyzer::DELIMITER
+                found = line.find( DELIMITER );
+
+                if( found != std::string::npos )
+                {
+                    statement = line.substr( found + std::string( DELIMITER ).length() );
+                    line.erase( found );
+
+                    if( trim_string( line ) && trim_string( statement ) )
+                    {
+                        //std::cout << "; Split: \"" << line << "\" and \"" << statement << "\"";
+                        identifiers.push_back( line );
+                        data += LogicalMatrix( statement );
+                    }
+
+                }
+
+                //std::cout << std::endl;
+            }
+        }
+
+        while( getline( read_file, line ) )
+        {
+            if( trim_comment( line ) )
+            {
+                //std::cout << "Second set: " << line << std::endl;
+                initial_identifiers.push_back( line );
             }
         }
 
@@ -60,7 +103,7 @@ ConditionalDependencyAnalyzer::ConditionalDependencyAnalyzer( const char filenam
     }
     else
     {
-        //std::cout << "Unable to open file" << std::endl;
+        std::cout << "Unable to open file" << std::endl;
     }
 }
 
@@ -72,6 +115,26 @@ void ConditionalDependencyAnalyzer::Analyze()
 
 std::ostream &operator<<( std::ostream &output, const ConditionalDependencyAnalyzer &object_arg )
 {
-    output << object_arg.data;
+    auto print_vector = [ &output ]( const std::vector< std::string > &input_vector )
+    {
+        std::string delim = "";
+
+        for( std::string const& value : input_vector )
+        {
+            output << delim << value;
+            delim = ", ";
+        }
+
+        output << std::endl;
+    };
+
+    output << "Conditions: " << object_arg.data << "\nIdentifiers: ";
+
+    print_vector( object_arg.identifiers );
+
+    output << "Initial Identifiers: ";
+
+    print_vector( object_arg.initial_identifiers );
+
     return output;
 }

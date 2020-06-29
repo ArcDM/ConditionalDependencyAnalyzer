@@ -12,11 +12,13 @@
 
 class ConditionalDependencyAnalyzer
 {
-    #define COMMENT = "#";
-    #define DELIMITER = ";";
+    #define DELIMITER ";"
+    #define COMMENT "#"
+    #define INITIAL_FLAG "###INITIAL###"
 
     private:
         LogicalMatrix data;
+        std::vector< std::string > identifiers;
         std::vector< std::string > initial_identifiers;
     public:
         ConditionalDependencyAnalyzer();

@@ -117,7 +117,7 @@ std::string ConditionalDependencyAnalyzer::analyze()
     std::vector< bool > result;
     std::vector< std::string > changed;
     std::ostringstream output;
-    size_t index, iteration = 0;
+    size_t index, count = 0, iteration = 0;
 
     for( const std::string& identifier : identifiers )
     {
@@ -166,7 +166,7 @@ std::string ConditionalDependencyAnalyzer::analyze()
             output << "Step" << ++iteration << ":" << std::endl;
 
             do {
-                output << changed.back() << std::endl;
+                output << ++count << ": " << changed.back() << std::endl;
                 changed.pop_back();
             } while( !changed.empty() );
         }

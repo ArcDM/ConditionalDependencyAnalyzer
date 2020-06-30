@@ -1,0 +1,7 @@
+E; A & B & C & D | E
+D; ( A & B & C | D ) & !( A & B & C & D )
+C; ( A & B | C ) & !( A & B & C )
+B; ( A | B ) & !( A & B )
+A; !A
+
+# 5 bit binary counter test

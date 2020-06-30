@@ -1,0 +1,6 @@
+A
+B
+C; B
+D; !A & C | D
+
+# wrong order falsifiable test

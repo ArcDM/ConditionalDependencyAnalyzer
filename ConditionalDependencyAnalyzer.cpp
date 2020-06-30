@@ -5,24 +5,8 @@
 
 #include "ConditionalDependencyAnalyzer.h"
 #include <windows.h>
-//#include <stdio.h>
 #include <fstream>
 #include <iostream>
-
-int main( int argc, char const *argv[] )
-{
-    std::cout << "Demo test" << std::endl;
-
-    //ConditionalDependencyAnalyzer cda;
-    ConditionalDependencyAnalyzer cda( "C:\\Users\\ArcDM\\github\\ConditionalDependencyAnalyzer\\TestDependency3.txt" );
-
-    std::cout << cda << std::endl;
-
-    std::string result = cda.analyze();
-
-    std::cout << result << std::endl;
-}
-
 
 static inline bool trim_comment( std::string &input_string )
 {
@@ -34,6 +18,36 @@ static inline bool trim_comment( std::string &input_string )
     }
 
     return trim_string( input_string );
+}
+
+static inline bool write_file( const char filename[], const std::string &content )
+{
+    std::ofstream write_file( filename );
+
+    if( write_file.is_open() )
+    {
+        write_file << content;
+        write_file.close();
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+int main( int argc, char const *argv[] )
+{
+    ConditionalDependencyAnalyzer cda;
+    //ConditionalDependencyAnalyzer cda( "C:\\Users\\ArcDM\\github\\ConditionalDependencyAnalyzer\\TestDependency3.txt" );
+
+    //std::cout << cda << std::endl;
+
+    std::string result = cda.analyze();
+
+    //std::cout << result << std::endl;
+
+    write_file( "C:\\Users\\ArcDM\\github\\ConditionalDependencyAnalyzer\\output.txt", result );
 }
 
 ConditionalDependencyAnalyzer::ConditionalDependencyAnalyzer()

@@ -138,14 +138,13 @@ std::string ConditionalDependencyAnalyzer::analyze()
     std::vector< bool > result;
     std::vector< std::string > changed, unattained( identifiers );
     std::ostringstream output;
-    size_t index, count = 0, iteration = 0, size = identifiers.size(), limit;
+    size_t index, count = 0, iteration = 0, limit = identifiers.size();
     bool complete, truth_value;
-    std::string *identifier_reference;
     std::vector< std::string >::iterator found;
 
-    if( size < 64 )
+    if( limit < 64 )
     {
-        limit = 1 << size;
+        limit = 1 << limit;
     }
     else
     {
@@ -207,22 +206,18 @@ std::string ConditionalDependencyAnalyzer::analyze()
 
             if( changed.empty() || iteration >= limit )
             {
-                changed.clear();
+                truth_value = true;
 
                 for( const std::string& identifier : identifiers )
                 {
                     if( !truth_table[ identifier ] && find( unattained.begin(), unattained.end(), identifier ) == unattained.end() )
                     {
-                        changed.push_back( identifier );
-                    }
-                }
+                        if( truth_value )
+                        {
+                            output << "Identifiers ended as False:" << std::endl;
+                            truth_value = false;
+                        }
 
-                if( !changed.empty() )
-                {
-                    output << "Identifiers ended as False:" << std::endl;
-
-                    for( const std::string& identifier : changed )
-                    {
                         output << identifier << std::endl;
                     }
                 }

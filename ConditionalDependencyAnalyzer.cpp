@@ -41,13 +41,13 @@ int main( int argc, char const *argv[] )
     ConditionalDependencyAnalyzer cda;
     //ConditionalDependencyAnalyzer cda( "C:\\Users\\ArcDM\\github\\ConditionalDependencyAnalyzer\\TestDependency3.txt" );
 
-    //std::cout << cda << std::endl;
+    std::cout << cda << std::endl;
 
     std::string result = cda.analyze();
 
-    //std::cout << result << std::endl;
+    std::cout << result;
 
-    write_file( "C:\\Users\\ArcDM\\github\\ConditionalDependencyAnalyzer\\output.txt", result );
+    //write_file( "C:\\Users\\ArcDM\\github\\ConditionalDependencyAnalyzer\\output.txt", result );
 }
 
 ConditionalDependencyAnalyzer::ConditionalDependencyAnalyzer()
@@ -103,8 +103,15 @@ ConditionalDependencyAnalyzer::ConditionalDependencyAnalyzer( const char filenam
                 if( trim_string( line ) )
                 {
                     identifiers.push_back( line );
-                    LogicalMatrix temp_LogicalMatrix( trim_string( statement )? statement : "!" + line );
-                    data += temp_LogicalMatrix;
+
+                    if( trim_string( statement ) )
+                    {
+                        data += LogicalMatrix( statement );
+                    }
+                    else
+                    {
+                        data += LogicalMatrix( line + " || !" + line );
+                    }
                 }
             }
         }
@@ -129,9 +136,21 @@ std::string ConditionalDependencyAnalyzer::analyze()
 {
     std::map< std::string, bool > truth_table;
     std::vector< bool > result;
-    std::vector< std::string > changed;
+    std::vector< std::string > changed, unattained( identifiers );
     std::ostringstream output;
-    size_t index, count = 0, iteration = 0;
+    size_t index, count = 0, iteration = 0, size = identifiers.size(), limit;
+    bool complete, truth_value;
+    std::string *identifier_reference;
+    std::vector< std::string >::iterator found;
+
+    if( size < 64 )
+    {
+        limit = 1 << size;
+    }
+    else
+    {
+        limit = -1;
+    }
 
     for( const std::string& identifier : identifiers )
     {
@@ -147,43 +166,82 @@ std::string ConditionalDependencyAnalyzer::analyze()
         truth_table[ identifier ] = true;
     }
 
-    while( !data.empty() )
+    if( !data.empty() )
     {
-        result = data.evaluate( truth_table );
-
-        index = identifiers.size();
-
         do {
-            if( result[ --index ] )
-            {
-                truth_table[ identifiers[ index ] ] = true;
-                changed.push_back( identifiers[ index ] );
+            result = data.evaluate( truth_table );
 
-                identifiers.erase( identifiers.begin() + index );
-                data.remove_statement( index );
-            }
-        } while( index > 0 );
-
-        if( changed.empty() )
-        {
-            output << "Unattainable Identifiers:" << std::endl;
+            complete = true;
+            index = 0;
 
             for( const std::string& identifier : identifiers )
             {
-                output << identifier << std::endl;
+                truth_value = result[ index ];
+                complete &= truth_value;
+
+                if( truth_table[ identifier ] ^ truth_value )
+                {
+                    truth_table[ identifier ] = truth_value;
+                    changed.push_back( identifier );
+
+                    found = find( unattained.begin(), unattained.end(), identifier );
+
+                    if( found != unattained.end() )
+                    {
+                        unattained.erase( found );
+                    }
+                }
+
+                ++index;
             }
 
-            break;
-        }
-        else
-        {
-            output << "Step" << ++iteration << ":" << std::endl;
+            if( !changed.empty() )
+            {
+                output << "Step" << ++iteration << ":" << std::endl;
 
-            do {
-                output << ++count << ": " << changed.back() << std::endl;
-                changed.pop_back();
-            } while( !changed.empty() );
-        }
+                for( const std::string& identifier : changed )
+                {
+                    output << ++count << ": " << identifier << ( truth_table[ identifier ]? "" : " ( falsified )" ) << std::endl;
+                }
+            }
+
+            if( changed.empty() || iteration >= limit )
+            {
+                changed.clear();
+
+                for( const std::string& identifier : identifiers )
+                {
+                    if( !truth_table[ identifier ] && find( unattained.begin(), unattained.end(), identifier ) == unattained.end() )
+                    {
+                        changed.push_back( identifier );
+                    }
+                }
+
+                if( !changed.empty() )
+                {
+                    output << "Identifiers ended as False:" << std::endl;
+
+                    for( const std::string& identifier : changed )
+                    {
+                        output << identifier << std::endl;
+                    }
+                }
+
+                if( !unattained.empty() )
+                {
+                    output << "Unattainable Identifiers:" << std::endl;
+
+                    for( const std::string& identifier : unattained )
+                    {
+                        output << identifier << std::endl;
+                    }
+                }
+
+                break;
+            }
+
+            changed.clear();
+        } while( !complete );
     }
 
     return output.str();

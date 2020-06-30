@@ -8,7 +8,6 @@
 
 #include "LogicalMatrix\LogicalMatrix.h"
 #include "LogicalMatrix\LogicalMatrix.cpp"
-#include <vector>
 
 class ConditionalDependencyAnalyzer
 {
